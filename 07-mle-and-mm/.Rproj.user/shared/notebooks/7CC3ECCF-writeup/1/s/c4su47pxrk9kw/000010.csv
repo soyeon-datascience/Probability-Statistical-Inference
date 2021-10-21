@@ -1,0 +1,1 @@
+"0","curve(dgamma(x, shape = mm.gam.shape, scale = mm.gam.scale), add = TRUE, col = ""blue"", lwd = 3)"

@@ -1,0 +1,1 @@
+"0","plot(ecdf(log_gamma), main = ""CDF of the transformation y=log(x) gamma random variable"", ylab = ""Probability"", xlab = ""log(x)"")"

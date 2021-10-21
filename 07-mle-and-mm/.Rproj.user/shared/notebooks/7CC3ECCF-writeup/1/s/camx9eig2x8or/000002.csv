@@ -1,0 +1,1 @@
+"0","plot(ecdf(d1$gh), main = ""CDF and eCDF of GH of Adult Females; MM"", lwd = 3, ylab = ""Probability"")"

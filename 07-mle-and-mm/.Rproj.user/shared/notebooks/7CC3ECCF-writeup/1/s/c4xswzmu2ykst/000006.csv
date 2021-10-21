@@ -1,0 +1,1 @@
+"0","curve(pgamma(x, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2]), add = TRUE, col = ""blue"", lwd = 3)"

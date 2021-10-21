@@ -1,0 +1,5 @@
+"0","ggplot(uni_mean_data, aes(x = uni_mean_diff)) +"
+"0","  geom_histogram(fill = ""gray"") + "
+"0","  theme_bw() + "
+"0","  labs(title = ""Histogram of the difference between the arithmetic mean and the geometric mean "
+"0","of Uniform distribution"", x = ""Mean difference(Arithmetic mean - Geometric Mean)"")"

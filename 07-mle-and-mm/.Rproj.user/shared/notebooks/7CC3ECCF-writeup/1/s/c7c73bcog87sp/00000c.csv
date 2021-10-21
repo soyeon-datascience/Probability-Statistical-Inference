@@ -1,0 +1,1 @@
+"0","plot(ecdf(d1$ht), main = ""CDF and eCDF of Height of Adult Females; MM"", lwd = 1)"

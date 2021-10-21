@@ -1,0 +1,7 @@
+"0","sample <- NA"
+"0","for(i in 1:1000){"
+"0","  data = rnorm(200)"
+"0","  sample[i] = median(data)"
+"0","}"
+"0",""
+"0","plot(ecdf(sample), main = ""ECDF and CDF of the Median Order Statistics of Normal Distribution"", xlab = parse(text = ""X(100)""), ylab = ""Probability"")"

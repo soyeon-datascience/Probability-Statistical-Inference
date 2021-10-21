@@ -1,0 +1,7 @@
+"0","random_sample <- rexp(200)"
+"0","q_candidate <- qexp"
+"0",""
+"0","x <- q_candidate((1:200)/200)"
+"0","y <- quantile(random_sample, probs = (1:200)/200)"
+"0",""
+"0","plot(x,y, asp = 1)"

@@ -1,0 +1,49 @@
+---
+title: "01. Roulette strategies_Martingale"
+author: "Soyeon Park"
+date: "8/30/2020"
+output: html_document
+---
+
+```{r global options, include = FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+library(magrittr)
+library(tidyverse)
+```
+
+# Introduction
+For Roulette game, there are many kinds of strategies. In this blog post, I want to talk about "Martingale" strategy. I am going to explain the answers about 4 questions below to explain the operating characteristics of "Martingale" strategy.
+
+1) How did I use computer simulation to calculate the average earnings of a gambler that uses this strategy?
+2) How does or does not changing a parameter of the simulation have an impact on average earnings?
+3) How did I use computer simulation to estimate the average number of plays before stopping.
+4) What is the limitation of the simulation?
+
+# Background
+"Martingale" strategy is that a gambler double the bet after every loss. In this way, he/she can recover all previous losses with win a profit which is equal to the original stake. 
+
+In this simulation we have 4 parameters-B,W,L and M. B is the gambler's starting budget. W refers to winnings threshold for stopping, which means once your total budget hits this amount of money, you will stop the game. L means time threshold for stopping. You cannot play the game more than this number. Lastly, M is casino's maximum wager. It means that the casino does not allow you to wager more than this much money. Every parameter has starting value and you can see these in the box below.
+
+Summary of parameters
+---------------------
+
+| Parameter | Description                     |             Starting value             |
+|:---------:|:--------------------------------|:--------------------------------------:|
+|   **B**   | Starting budget                 |                  $200                  |
+|   **W**   | Winnings threshold for stopping | $300 (Starting budget + $100 winnings) |
+|   **L**   | Time threshold for stopping     |               1000 plays               |
+|   **M**   | Casino’s maximum wager          |                  $100                  |
+
+
+# Methods
+Here is the computer simulation I will use. 
+
+I defined how a game works using "one_play" function. 
+
+How much I will wager depends on the previous game's result, my current budget and the casino wager limit. If I win the previous game, my next prospective wager is $1. Otherwise, I will wager the double amount of my loss in the previous game. However, the wager can't exceed either my budget or the casino wager limit. Therefore, the least money among three will be my final next wager. Since there is 18 red color among 38 pockets, the probability that a red pocket will be selected is 18/38. If a red pocket is selected, then we earn money as much as I wagered before! However, if either green or black pocket is selected, I would lose the money I wagered before. I saved each play's budget in the budget vector. 
+
+We can't play the roulette game forever. This is the reason why we need "stop_play" function. There are three case which will stop the game. The first case is when my budget become 0, which means I can't wager anymore! The second case is the number of played game become equal to the maximum number of plays. The last case is my budget is increased as same as the amount I planned to stop.
+
+Finally, I am going to simulate this situation 10,000 times. Every time the game is over, my final budget is saved in the "walk_out_money" vector. For example, my first game's final budget is saved in "walk_out_money[1], and my second final budget will be saved in "walk_out_money[2]". Finally 10,000 final budget will be created.
+
+Also, I calculated the number of plays in each simulation. The size of the budget vector is same with the number of played games in each simulation. 

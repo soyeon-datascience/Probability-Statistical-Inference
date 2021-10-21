@@ -1,0 +1,21 @@
+"0","library(ggplot2)"
+"0","library(magrittr)"
+"0","library(ggpubr)"
+"2","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+"
+"0","x <- seq(-1, 10, by = 0.01)"
+"0","pdf <- dgamma(x, shape = 3, scale = 1)"
+"0","cdf = pgamma(x, shape = 3, scale = 1)"
+"0",""
+"0","gamma_data <- data.frame(x, pdf, cdf)"
+"0","mean_gam <- 3*1"
+"0","median_gam <- qgamma(0.5, shape = 3, scale = 1)"
+"0",""
+"0","ggplot(gamma_data, aes(x = x)) + "
+"0","  geom_line(aes(y = pdf)) + "
+"0","  theme_bw() + "
+"0","  labs(title = ""PDF of the Gamma Distribution"", x = ""X"", y = ""Probability Density"", subtitle = ""The red line shows mean (mean = shape * scale)"") + "
+"0","  geom_vline(xintercept = mean_gam, col = ""red"", lable= ""mean"")"
+"2","Ignoring unknown parameters: lable"

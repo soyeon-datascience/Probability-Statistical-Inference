@@ -1,0 +1,5 @@
+"0","library(tidyverse)"
+"0","library(stats4)"
+"0",""
+"0","N = 201"
+"0","data = rnorm(N)"

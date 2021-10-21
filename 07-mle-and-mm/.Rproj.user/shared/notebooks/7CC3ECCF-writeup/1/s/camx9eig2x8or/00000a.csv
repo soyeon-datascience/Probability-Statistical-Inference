@@ -1,0 +1,1 @@
+"0","legend(""topleft"", legend = c(""eCDF of GH"", ""Normal CDF"", ""Gamma CDF"", ""Weibull CDF""), col = c(""black"", ""red"", ""blue"", ""green""), lty = 1:1, cex = 0.8)"

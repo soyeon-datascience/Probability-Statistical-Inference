@@ -1,0 +1,6 @@
+"0","dorder <- function(x, n, k){"
+"0","  k*choose(n,k)*"
+"0","    (pnorm(x))^(k-1)*"
+"0","    (1-pnorm(x))^(n-k)*"
+"0","    dnorm(x)"
+"0","}"

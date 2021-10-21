@@ -1,0 +1,8 @@
+"0","# Normal Distribution"
+"0","qs <- seq(0.05, 0.95, length = 50)"
+"0",""
+"0","sample_qs <- quantile(d1$gh, qs)"
+"0","theo_qs <- qnorm(qs, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2])"
+"0",""
+"0","plot(sample_qs, theo_qs, pch = 16, main = ""QQ plot for sample distribution and estimated Normal Distrbution; MLE"", "
+"0","     xlab = ""The sample quantile"", ylab = ""The theoretical Normal distribution quantile"")"

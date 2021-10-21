@@ -1,0 +1,8 @@
+"0","sample <- NA"
+"0","for(i in 1:200) {"
+"0","  sample[i] = max(rnorm(200))"
+"0","}"
+"0",""
+"0","x <- qorder(seq(0.01, 0.99, by = 0.01), n = 200, k = 200)"
+"0","y <- quantile(sample, probs = seq(0.01, 0.99, by = 0.01))"
+"0","plot(x, y, asp = 1, main = ""QQ plot for the sample max and the theoretical largest order statistic"", xlab = ""The theoretical largest order statistic quantile"", ylab = ""The sample max quantile"")"

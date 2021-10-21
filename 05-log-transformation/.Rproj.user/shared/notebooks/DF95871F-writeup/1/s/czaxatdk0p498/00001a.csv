@@ -1,0 +1,1 @@
+"0","plot(ecdf(log_uni), main = ""CDF of the transformation y=log(x) Uniform random variable"", ylab = ""Probability"", xlab = ""log(x)"", xlim = c(-5, 10))"

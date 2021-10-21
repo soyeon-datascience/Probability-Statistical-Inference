@@ -1,0 +1,1 @@
+"0","curve(pweibull(x, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2]), add=TRUE, col = ""green"", lwd = 3)"

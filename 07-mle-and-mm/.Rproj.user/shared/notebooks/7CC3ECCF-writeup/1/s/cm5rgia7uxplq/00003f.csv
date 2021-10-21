@@ -1,0 +1,1 @@
+"0","curve(dnorm(x, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2]), col = ""red"", lwd = 3, add = TRUE)"

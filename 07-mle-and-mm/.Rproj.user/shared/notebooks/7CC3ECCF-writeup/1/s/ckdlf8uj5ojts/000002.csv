@@ -1,0 +1,8 @@
+"0","# Gamma Distribution"
+"0","qs <- seq(0.05, 0.95, length = 50)"
+"0",""
+"0","sample_qs <- quantile(d1$ht, qs)"
+"0","theo_qs <- qgamma(qs, scale = mm.gam.scale, shape = mm.gam.shape)"
+"0",""
+"0","plot(sample_qs, theo_qs, pch = 16, main = ""QQ plot for sample distribution and estimated Gamma Distrbution; MM"", "
+"0","     xlab = ""The sample quantile"", ylab = ""The theoretical Gamma distribution quantile"")"

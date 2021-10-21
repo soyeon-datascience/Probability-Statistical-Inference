@@ -1,0 +1,8 @@
+"0","# Weibull Distribution"
+"0","qs <- seq(0.05, 0.95, length = 50)"
+"0",""
+"0","sample_qs <- quantile(d1$ht, qs)"
+"0","theo_qs <- qweibull(qs, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2])"
+"0",""
+"0","plot(sample_qs, theo_qs, pch = 16, main = ""QQ plot for sample distribution and estimated Weibull Distrbution; MLE"", "
+"0","     xlab = ""The sample quantile"", ylab = ""The theoretical Weibull distribution quantile"")"

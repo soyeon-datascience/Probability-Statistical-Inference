@@ -1,0 +1,6 @@
+"0","# Gamma Distribution"
+"0","M <- 5000"
+"0","N <- 1000"
+"0","out <- rgamma(N * M, shape = mm.gam.shape, scale = mm.gam.scale) %>% array(dim = c(M,N))"
+"0","sample_dist_gam_ht <- apply(out, 1, median)"
+"0","hist(sample_dist_gam_ht, breaks = 100, main = ""Histogram of Hegiht Sample Gamma Distribution; MM"", xlab = ""Height(cm)"", freq = FALSE)"

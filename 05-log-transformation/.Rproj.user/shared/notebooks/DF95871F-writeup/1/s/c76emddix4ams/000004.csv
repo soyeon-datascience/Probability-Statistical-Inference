@@ -1,0 +1,5 @@
+"0","ggplot(uni_data, aes(x = x)) + "
+"0","  geom_line(aes(y = cdf)) + "
+"0","  geom_vline(xintercept = median_uni, col = ""blue"") +"
+"0","  theme_bw() +"
+"0","  labs(title = ""CDF of the Uniform Distribution"", x = ""X"", y = ""Probability"", subtitle = ""The blue line shows median (median = x where the probability is 0.5)"")"

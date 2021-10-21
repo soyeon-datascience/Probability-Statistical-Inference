@@ -1,0 +1,5 @@
+"0","porder <- function(x, n, k, dist = ""norm"", ...) {"
+"0","  pf <- get(paste0(""p"", dist))"
+"0","  "
+"0","  pbinom(k-1, n, pf(x, ...), lower.tail = FALSE)"
+"0","}"

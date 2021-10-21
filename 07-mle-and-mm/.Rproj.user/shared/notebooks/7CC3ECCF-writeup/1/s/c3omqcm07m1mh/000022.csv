@@ -1,0 +1,1 @@
+"0","curve(pnorm(x, mean = coef(param_hat)[1], sd = coef(param_hat)[2]), col = ""red"", lwd = 3, add = TRUE)"

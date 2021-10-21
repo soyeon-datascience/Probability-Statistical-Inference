@@ -1,0 +1,1 @@
+"0","curve(pnorm(x, mm.norm.mean, mm.norm.sd), add = TRUE, col = ""red"", lwd = 3)"

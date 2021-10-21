@@ -1,0 +1,26 @@
+---
+title: "practice_vector"
+author: "Soyeon Park"
+date: "9/22/2020"
+output: html_document
+---
+```{r}
+sample(10) + 100
+```
+```{r}
+sample(10) + 100:101
+```
+
+```{r}
+sample(10)
+```
+
+```{r}
+sample(30)
+```
+
+```{r}
+sample(10) + 100:102
+
+```
+

@@ -1,0 +1,7 @@
+"0","# Simulation"
+"0","walk_out_money <- rep(NA, 10000)"
+"0","number_of_plays <- rep(NA, 10000)"
+"0","for(j in seq_along(walk_out_money)){"
+"0","  walk_out_money[j] <- one_series(B = 250, W = 300, L = 1000, M = 100) %>% get_last"
+"0","  number_of_plays[j] <- length(one_series(B= 250, W = 300, L = 1000, M = 100))"
+"0","}"

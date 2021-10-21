@@ -1,0 +1,1 @@
+"0","curve(dweibull(x, shape = mm.wbll.k, scale = mm.wbll.lambda), add=TRUE, col = ""green"", lwd = 3)"

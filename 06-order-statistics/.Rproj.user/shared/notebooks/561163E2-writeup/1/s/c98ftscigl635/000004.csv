@@ -1,0 +1,2 @@
+"0","x = seq(-5,5, by = 0.001)"
+"0","plot(x, dorder(x, n = 200, k = 1), type = ""l"", main = ""PDF of Min Order Statistic of Standard Normal Density"", ylab = ""Density Probability"", xlab = ""X(1)"")"

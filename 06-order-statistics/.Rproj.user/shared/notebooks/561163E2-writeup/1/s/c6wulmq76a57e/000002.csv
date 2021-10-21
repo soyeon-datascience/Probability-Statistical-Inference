@@ -1,0 +1,7 @@
+"0","qorder <- function(p, n, k, dist = ""norm"", ...){"
+"0","  out <- p"
+"0","  for(i in seq_along(p)) {"
+"0","    out[i] <- uniroot(function(x){porder(x, n, k, dist, ...) - p[i]}, c(-100, 100))$root"
+"0","  }"
+"0","  out"
+"0","}"

@@ -1,0 +1,4 @@
+"0","x <- seq(0, 1, by = 0.001)"
+"0","y <- pnbinom(3, 4, x)"
+"2","NaNs produced"
+"0","plot(x, y, main = ""Probability of winning the World Series"", xlab = ""Probability of the Braves winning a head-to-head match up"", ylab = ""Pr(the Braves Win World Series)"", type = ""l"")"

@@ -1,0 +1,6 @@
+"0","porder <- function(x) {"
+"0","  pbinom(100-1, 200, pnorm(x, 0, 1), lower.tail = FALSE)"
+"0","}"
+"0",""
+"0","x = seq(-1, 1, by = 0.001)"
+"0","plot(x, porder(x), type = ""l"", main = ""CDF of Median Order Statistic of Standard Normal Density"", xlab = ""X(100)"", ylab = ""Probability"")"

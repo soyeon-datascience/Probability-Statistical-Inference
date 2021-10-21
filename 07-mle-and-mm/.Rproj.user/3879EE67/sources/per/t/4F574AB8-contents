@@ -1,0 +1,763 @@
+---
+title: "Modeling the unknown distribution with maximum likelihood and method of moments"
+author: "Soyeon Park"
+date: "10/25/2020"
+output: html_document
+---
+
+Maximum likelihood (MLE) and method of moments (MM) are two common
+methods for constructing a model.
+
+# Assignment
+
+In this deliverable, I am going to write a tutorial in which I will explain
+to the reader how one might use MLE and MM to model (a) Glycohemoglobin
+and (b) Height of adult females. The data will be from National Health
+and Nutrition Examination Survey 2009-2010 (NHANES), available from the
+Hmisc package. I will compare and contrast the two methods in addition
+to comparing and contrasting the choice of underlying distribution.
+
+# Checklist
+
+|                                      | Normal | Gamma | Weibull |
+|:-------------------------------------|:------:|:-----:|:-------:|
+| Estimates of parameters              |        |       |         |
+| Overlay estimated pdf onto histogram |        |       |         |
+| Overlay estimated CDF onto eCDF      |        |       |         |
+| QQ plot (sample vs estimated dist)   |        |       |         |
+| Estimated Median                     |        |       |         |
+| Median Samp Dist (hist)              |        |       |         |
+| Range of middle 95% of Samp Dist     |        |       |         |
+
+# Result
+
+```{r}
+require(dplyr)
+require(stats4)
+Hmisc::getHdata(nhgh)
+d1 <- nhgh %>% 
+  filter(sex == "female") %>% 
+  filter(age >= 18) %>% 
+  select(gh, ht) %>% 
+  filter(1:n()<=1000)
+```
+
+## Glycohemoglobin
+
+### Method of Moments
+1. Estimates of parameters
+
+    * Normal Distribution
+    
+```{r}
+# Normal Distribution
+(mm.norm.mean = mean(d1$gh))
+(mm.norm.sd = sd(d1$gh))
+```
+
+    * Gamma Distribution
+    
+```{r}
+# Gamma Distribution
+(mm.gam.shape = mean(d1$gh)^2 / var(d1$gh))
+(mm.gam.scale = var(d1$gh) / mean(d1$gh))
+```
+
+    * Weibull Distribution
+    
+```{r}
+# Weibull Distribution
+
+# Weibull Distribution Mean...(1)
+mean.wbll = function(lambda, k){
+  lambda * gamma(1 + 1/k)
+}
+# Weibull Distribution Variance...(2)
+var.wbll = function(lambda, k) {
+  lambda^2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))^2)
+}
+# Lambda definition in Mean of Weibull Distribution...(3)
+lambda = function(sample.mean, k){
+  sample.mean / gamma(1 + 1/k)
+}
+# Combine (2) and (3)
+var.wbll = function(sample.mean, k) {
+  lambda(sample.mean, k)^2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))^2)
+}
+
+# Find k value
+find.var.wbll = function(sample.mean, k, sample.var) {
+  lambda(sample.mean, k)^2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))^2) - sample.var
+}
+
+x = seq(10, 100, by = 0.01)
+plot(x, y = find.var.wbll(mean(d1$gh), k = x, sample.var = var(d1$gh)), xlab = "k", ylab = "function (find.var.wbll)", main = "Function for variance of Weibull Distribution")
+
+mm.wbll.opt <- optimize(f = function(x) {abs(find.var.wbll(k = x, mean(d1$gh), sample.var = var(d1$gh)))}, lower = 10, upper = 100)
+
+(mm.wbll.k = mm.wbll.opt$minimum)
+(mm.wbll.lambda = lambda(sample.mean = mean(d1$gh), k = mm.wbll.k))
+```
+
+2. Overlay estimated pdf onto histogram
+```{r}
+hist(d1$gh, main = "Glycohemoglobin of Adult Females; MM", breaks = 100, freq = FALSE, xlab = "Glycohemogolbin")
+curve(dnorm(x, mm.norm.mean, mm.norm.sd), add = TRUE, col = "red", lwd = 3)
+curve(dgamma(x, shape = mm.gam.shape, scale = mm.gam.scale), add = TRUE, col = "blue", lwd = 3)
+curve(dweibull(x, shape = mm.wbll.k, scale = mm.wbll.lambda), add=TRUE, col = "green", lwd = 3)
+legend("topleft", legend = c("Normal", "Gamma", "Weibull"), col = c("red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+3. Overlay estimated CDF onto eCDF
+```{r}
+plot(ecdf(d1$gh), main = "CDF and eCDF of GH of Adult Females; MM", lwd = 3, ylab = "Probability")
+curve(pnorm(x, mm.norm.mean, mm.norm.sd), add = TRUE, col = "red", lwd = 3)
+curve(pgamma(x, shape = mm.gam.shape, scale = mm.gam.scale), add = TRUE, col = "blue", lwd = 3)
+curve(pweibull(x, shape = mm.wbll.k, scale = mm.wbll.lambda), add=TRUE, col = "green", lwd = 3)
+legend("topleft", legend = c("eCDF of GH", "Normal CDF", "Gamma CDF", "Weibull CDF"), col = c("black", "red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+4. QQ plot (Sample vs estimated dist)
+    
+    * Normal Distribution
+```{r}
+# Normal Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$gh, qs)
+theo_qs <- qnorm(qs, mean = mm.norm.mean, sd = mm.norm.sd)
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Normal Distrbution; MM", 
+     xlab = "The sample quantile", ylab = "The theoretical Normal distribution quantile")
+abline(0,1)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$gh, qs)
+theo_qs <- qgamma(qs, scale = mm.gam.scale, shape = mm.gam.shape)
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Gamma Distrbution; MM", 
+     xlab = "The sample quantile", ylab = "The theoretical Gamma distribution quantile")
+abline(0,1)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$gh, qs)
+theo_qs <- qweibull(qs, shape = mm.wbll.k, scale = mm.wbll.lambda)
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Weibull Distrbution; MM", 
+     xlab = "The sample quantile", ylab = "The theoretical Weibull distribution quantile")
+abline(0,1)
+```
+
+5. Estimated Median
+```{r}
+# Sample Median
+median(d1$gh)
+
+# Normal Distribution
+qnorm(.5, mean = mm.norm.mean, sd = mm.norm.sd)
+
+# Gamma Distribution
+qgamma(.5, shape = mm.gam.shape, scale = mm.gam.scale)
+
+# Weibull Distribution
+qweibull(.5, shape = mm.wbll.k, scale = mm.wbll.lambda)
+```
+
+6. Median Sample Distribution(Histogram)
+    
+    * Normal Distribution
+```{r}
+# Normal Distribution
+M <- 5000
+N <- 1000
+out <- rnorm(N * M, mean = mm.norm.mean, sd = mm.norm.sd) %>% array(dim = c(M,N))
+sample_dist_norm_gh <- apply(out, 1, median)
+hist(sample_dist_norm_gh, breaks = 100, main = "Histogram of GH Sample Normal Distribution; MM", xlab = "Glycohemoglobin", freq = FALSE)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+M <- 5000
+N <- 1000
+out <- rgamma(N * M, shape = mm.gam.shape, scale = mm.gam.scale) %>% array(dim = c(M,N))
+sample_dist_gam_gh <- apply(out, 1, median)
+hist(sample_dist_gam_gh, breaks = 100, main = "Histogram of GH Sample Gamma Distribution; MM", xlab = "Glycohemoglobin", freq = FALSE)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+M <- 5000
+N <- 1000
+out <- rweibull(N * M, shape = mm.wbll.k, scale = mm.wbll.lambda) %>% array(dim = c(M,N))
+sample_dist_wbll_gh <- apply(out, 1, median)
+hist(sample_dist_wbll_gh, breaks = 100, main = "Histogram of GH Sample Weibull Distribution; MM", xlab = "Glycohemoglobin", freq = FALSE)
+```
+
+7. Range of middle 95% of Sample Distribution
+```{r}
+# Normal Distribution
+quantile(sample_dist_norm_gh, c(0.05/2, 1 - 0.05/2))
+
+# Gamma Distribution
+quantile(sample_dist_gam_gh, c(0.05/2, 1 - 0.05/2))
+
+# Weibull Distribution
+quantile(sample_dist_wbll_gh, c(0.05/2, 1 - 0.05/2))
+```
+Normal distribution : (5.65, 5.81)
+Gamma distribution : (5.58, 5.74)
+Weibull distribution : (5.75, 5.85)
+
+### Maximum Likelihood Estimation
+
+1. Estimate of parameters
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+normal.ll <- function(mean, sd){
+  fs <- dnorm(x = d1$gh, mean = mean, sd = sd, log = TRUE)
+  -sum(fs)
+}
+
+fit_norm <- mle(
+  normal.ll,
+  start = list(mean = 160, sd = 5),
+  method = "L-BFGS-B",
+  lower = c(0, 0.01)
+)
+par(mfrow = c(1,2)); plot(profile(fit_norm), absVal = FALSE)
+coef(fit_norm)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+gamma.ll <- function(shape, scale){
+  fs <- dgamma(x = d1$gh, shape = shape, scale = scale, log = TRUE)
+  -sum(fs)
+}
+
+fit_gamma <- mle(
+  gamma.ll,
+  start = list(shape = 482, scale = 0.33),
+  method = "L-BFGS-B",
+  lower = c(0, 0.01)
+)
+par(mfrow = c(1,2)); plot(profile(fit_gamma), absVal = FALSE)
+coef(fit_gamma)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+wbll.ll <- function(shape, scale){
+  fs <- dweibull(x = d1$gh, shape = shape, scale = scale, log = TRUE)
+  -sum(fs)
+}
+
+fit_wbll <- mle(
+  wbll.ll,
+  start = list(shape = 10, scale = 6),
+  method = "L-BFGS-B",
+  lower = c(0, 0.01)
+)
+par(mfrow = c(1,2)); plot(profile(fit_wbll), absVal = FALSE)
+coef(fit_wbll)
+```
+
+2. Overlay estimated pdf onto histogram
+```{r}
+hist(d1$gh, breaks = 100, freq = FALSE, main = "GH of Adult Females; MLE", xlab = "GH")
+curve(dnorm(x, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2]), col = "red", lwd = 3, add = TRUE)
+curve(dgamma(x, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2]), col = "blue", lwd = 3, add = TRUE)
+curve(dweibull(x, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2]), col = "green", lwd = 3, add = TRUE)
+legend("topleft", legend = c("Normal", "Gamma", "Weibull"), col = c("red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+3. Overlay estimated CDF onto eCDF
+```{r}
+plot(ecdf(d1$gh), main = "CDF and eCDF of GH of Adult Females; MLE", lwd = 3)
+curve(pnorm(x, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2]), col = "red", lwd = 3, add = TRUE)
+curve(pgamma(x, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2]), add = TRUE, col = "blue", lwd = 3)
+curve(pweibull(x, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2]), add=TRUE, col = "green", lwd = 3)
+legend("topleft", legend = c("eCDF of Height", "Normal CDF", "Gamma CDF", "Weibull CDF"), col = c("black", "red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+4. QQ plot(Sample vs estimated distribution)
+```{r}
+# Normal Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$gh, qs)
+theo_qs <- qnorm(qs, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2])
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Normal Distrbution; MLE", 
+     xlab = "The sample quantile", ylab = "The theoretical Normal distribution quantile")
+abline(0,1)
+```
+
+```{r}
+# Gamma Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$gh, qs)
+theo_qs <- qgamma(qs, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2])
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Gamma Distrbution; MLE", 
+     xlab = "The sample quantile", ylab = "The theoretical Gamma distribution quantile")
+abline(0,1)
+```
+
+```{r}
+# Weibull Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$gh, qs)
+theo_qs <- qweibull(qs, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2])
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Weibull Distrbution; MLE", 
+     xlab = "The sample quantile", ylab = "The theoretical Weibull distribution quantile")
+abline(0,1)
+```
+
+5. Estimated Median
+```{r}
+# Sample Median
+median(d1$gh)
+
+# Normal Distribution
+qnorm(.5, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2])
+
+# Gamma Distribution
+qgamma(.5, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2])
+
+# Weibull Distribution
+qweibull(.5, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2])
+```
+
+6. Median Sample Distribution (Histogram)
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+M <- 5000
+N <- 1000
+out <- rnorm(N*M, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2]) %>% array(dim = c(M,N))
+sample_normal_dist_mle <- apply(out, 1, median)
+hist(sample_normal_dist_mle, breaks = 100, main = "Histogram of GH Sample Normal Distribution; MLE", xlab = "Glycohemoglobin", freq = FALSE)
+```
+    
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+M <- 5000
+N <- 1000
+out <- rgamma(N*M, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2]) %>% array(dim = c(M,N))
+sample_gamma_dist_mle <- apply(out, 1, median)
+hist(sample_gamma_dist_mle, breaks = 100, main = "Histogram of GH Sample Gamma Distribution; MLE", xlab = "Glycohemoglobin", freq = FALSE)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+M <- 5000
+N <- 1000
+out <- rweibull(N*M, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2]) %>% array(dim = c(M,N))
+sample_wbll_dist_mle <- apply(out, 1, median)
+hist(sample_wbll_dist_mle, breaks = 100, main = "Histogram of GH Sample Weibull Distribution; MLE", xlab = "Glycohemoglobin", freq = FALSE)
+```
+
+7. Range of middle 95% of Sample Distribution
+```{r}
+# Normal Distribution
+quantile(sample_normal_dist_mle, c(0.05/2, 1 - 0.05/2))
+
+# Gamma Distribution
+quantile(sample_gamma_dist_mle, c(0.05/2, 1 - 0.05/2))
+
+# Weibull Distribution
+quantile(sample_wbll_dist_mle, c(0.05/2, 1 - 0.05/2))
+```
+Normal distribution : (5.64, 5.81)
+Gamma distribution : (5.61, 5.75)
+Weibull distribution : (5.52, 5.78)
+
+## Height
+
+### Method of Moments
+
+1. Estimates of parameters
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+(mm.norm.mean = mean(d1$ht))
+(mm.norm.sd = sd(d1$ht))
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+(mm.gam.shape = mean(d1$ht)^2 / var(d1$ht))
+(mm.gam.scale = var(d1$ht) / mean(d1$ht))
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+
+# Weibull Distribution Mean...(1)
+mean.wbll = function(lambda, k){
+  lambda * gamma(1 + 1/k)
+}
+# Weibull Distribution Variance...(2)
+var.wbll = function(lambda, k) {
+  lambda^2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))^2)
+}
+# Lambda definition in Mean of Weibull Distribution...(3)
+lambda = function(sample.mean, k){
+  sample.mean / gamma(1 + 1/k)
+}
+# Combine (2) and (3)
+var.wbll = function(sample.mean, k) {
+  lambda(sample.mean, k)^2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))^2)
+}
+
+# Find k value
+find.var.wbll = function(sample.mean, k, sample.var) {
+  lambda(sample.mean, k)^2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))^2) - sample.var
+}
+
+x = seq(10, 100, by = 0.01)
+plot(x, y = find.var.wbll(mean(d1$ht), k = x, sample.var = var(d1$ht)), main = "Function for variance of Weibull Distribution", xlab = "k", ylab = "Function(find.var.wbll)")
+
+mm.wbll.opt <- optimize(f = function(x) {abs(find.var.wbll(k = x, mean(d1$ht), sample.var = var(d1$ht)))}, lower = 10, upper = 100)
+
+(mm.wbll.k = mm.wbll.opt$minimum)
+(mm.wbll.lambda = lambda(sample.mean = mean(d1$ht), k = mm.wbll.k))
+```
+
+2. Overlay estimated pdf onto histogram
+```{r}
+hist(d1$ht, main = "Height of Adult Females; MM", breaks = 100, freq = FALSE, xlab = "Height(cm)")
+curve(dnorm(x, mm.norm.mean, mm.norm.sd), add = TRUE, col = "red", lwd = 3)
+curve(dgamma(x, shape = mm.gam.shape, scale = mm.gam.scale), add = TRUE, col = "blue", lwd = 3)
+curve(dweibull(x, shape = mm.wbll.k, scale = mm.wbll.lambda), add=TRUE, col = "green", lwd = 3)
+legend("topleft", legend = c("Normal", "Gamma", "Weibull"), col = c("red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+3. Overlay estimated CDF onto eCDF
+```{r}
+plot(ecdf(d1$ht), main = "CDF and eCDF of Height of Adult Females; MM", lwd = 1)
+curve(pnorm(x, mm.norm.mean, mm.norm.sd), add = TRUE, col = "red", lwd = 3)
+curve(pgamma(x, shape = mm.gam.shape, scale = mm.gam.scale), add = TRUE, col = "blue", lwd = 3)
+curve(pweibull(x, shape = mm.wbll.k, scale = mm.wbll.lambda), add=TRUE, col = "green", lwd = 3)
+legend("topleft", legend = c("eCDF of Height", "Normal CDF", "Gamma CDF", "Weibull CDF"), col = c("black", "red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+4. QQ plot (Sample vs estimated dist)
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$ht, qs)
+theo_qs <- qnorm(qs, mean = mm.norm.mean, sd = mm.norm.sd)
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Normal Distrbution; MM", 
+     xlab = "The sample quantile", ylab = "The theoretical Normal distribution quantile")
+abline(0,1)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$ht, qs)
+theo_qs <- qgamma(qs, scale = mm.gam.scale, shape = mm.gam.shape)
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Gamma Distrbution; MM", 
+     xlab = "The sample quantile", ylab = "The theoretical Gamma distribution quantile")
+abline(0,1)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$ht, qs)
+theo_qs <- qweibull(qs, shape = mm.wbll.k, scale = mm.wbll.lambda)
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Weibull Distrbution; MM", 
+     xlab = "The sample quantile", ylab = "The theoretical Weibull distribution quantile")
+abline(0,1)
+```
+
+5. Estimated Median
+```{r}
+# Sample Median
+median(d1$ht)
+
+# Normal Distribution
+qnorm(.5, mean = mm.norm.mean, sd = mm.norm.sd)
+
+# Gamma Distribution
+qgamma(.5, shape = mm.gam.shape, scale = mm.gam.scale)
+
+# Weibull Distribution
+qweibull(.5, shape = mm.wbll.k, scale = mm.wbll.lambda)
+```
+Normal distribution : 160.74
+Gamma distribution : 160.63
+Weibull distribution : 161.81
+
+6. Median Sample Distribution(Histogram)
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+M <- 5000
+N <- 1000
+out <- rnorm(N * M, mean = mm.norm.mean, sd = mm.norm.sd) %>% array(dim = c(M,N))
+sample_dist_norm_ht <- apply(out, 1, median)
+hist(sample_dist_norm_ht, breaks = 100, main = "Histogram of Hegiht Sample Normal Distribution; MM", xlab = "Height(cm)", freq = FALSE)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+M <- 5000
+N <- 1000
+out <- rgamma(N * M, shape = mm.gam.shape, scale = mm.gam.scale) %>% array(dim = c(M,N))
+sample_dist_gam_ht <- apply(out, 1, median)
+hist(sample_dist_gam_ht, breaks = 100, main = "Histogram of Hegiht Sample Gamma Distribution; MM", xlab = "Height(cm)", freq = FALSE)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+M <- 5000
+N <- 1000
+out <- rweibull(N * M, shape = mm.wbll.k, scale = mm.wbll.lambda) %>% array(dim = c(M,N))
+sample_dist_wbll_ht <- apply(out, 1, median)
+hist(sample_dist_wbll_ht, breaks = 100, main = "Histogram of Hegiht Sample Weibull Distribution; MM", xlab = "Height(cm)", freq = FALSE)
+```
+
+7. Range of middle 95% of Sample Distribution
+```{r}
+# Normal Distribution
+quantile(sample_dist_norm_ht, c(0.05/2, 1 - 0.05/2))
+
+# Gamma Distribution
+quantile(sample_dist_gam_ht, c(0.05/2, 1 - 0.05/2))
+
+# Weibull Distribution
+quantile(sample_dist_wbll_ht, c(0.05/2, 1 - 0.05/2))
+```
+Normal distribution : (161.2827, 162.3287)
+Gamma distribution : (160.0423, 161.1965)
+Weibull distribution : (161.2771, 162.3309)
+
+### Maximum Likelihood Estimation
+
+1. Estimate of parameters
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+normal.ll <- function(mean, sd){
+  fs <- dnorm(x = d1$ht, mean = mean, sd = sd, log = TRUE)
+  -sum(fs)
+}
+
+fit_norm <- mle(
+  normal.ll,
+  start = list(mean = 160, sd = 5),
+  method = "L-BFGS-B",
+  lower = c(0, 0.01)
+)
+par(mfrow = c(1,2)); plot(profile(fit_norm), absVal = FALSE)
+coef(fit_norm)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+gamma.ll <- function(shape, scale){
+  fs <- dgamma(x = d1$ht, shape = shape, scale = scale, log = TRUE)
+  -sum(fs)
+}
+
+fit_gamma <- mle(
+  gamma.ll,
+  start = list(shape = 482, scale = 0.33),
+  method = "L-BFGS-B",
+  lower = c(0, 0.01)
+)
+par(mfrow = c(1,2)); plot(profile(fit_gamma), absVal = FALSE)
+coef(fit_gamma)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+wbll.ll <- function(shape, scale){
+  fs <- dweibull(x = d1$ht, shape = shape, scale = scale, log = TRUE)
+  -sum(fs)
+}
+
+fit_wbll <- mle(
+  wbll.ll,
+  start = list(shape = 27, scale = 164),
+  method = "L-BFGS-B",
+  lower = c(0, 0.01)
+)
+par(mfrow = c(1,2)); plot(profile(fit_wbll), absVal = FALSE)
+coef(fit_wbll)
+```
+
+2. Overlay estimated pdf onto histogram
+```{r}
+hist(d1$ht, breaks = 100, freq = FALSE, main = "Height of Adult Females; MLE", xlab = "Height(cm)")
+curve(dnorm(x, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2]), col = "red", lwd = 3, add = TRUE)
+curve(dgamma(x, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2]), col = "blue", lwd = 3, add = TRUE)
+curve(dweibull(x, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2]), col = "green", lwd = 3, add = TRUE)
+legend("topleft", legend = c("Normal", "Gamma", "Weibull"), col = c("red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+3. Overlay estimated CDF onto eCDF
+```{r}
+plot(ecdf(d1$ht), main = "CDF and eCDF of Height of Adult Females; MLE", lwd = 3)
+curve(pnorm(x, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2]), col = "red", lwd = 3, add = TRUE)
+curve(pgamma(x, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2]), add = TRUE, col = "blue", lwd = 3)
+curve(pweibull(x, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2]), add=TRUE, col = "green", lwd = 3)
+legend("topleft", legend = c("eCDF of Height", "Normal CDF", "Gamma CDF", "Weibull CDF"), col = c("black", "red", "blue", "green"), lty = 1:1, cex = 0.8)
+```
+
+4. QQ plot(Sample vs estimated distribution)
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$ht, qs)
+theo_qs <- qnorm(qs, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2])
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Normal Distrbution; MLE", 
+     xlab = "The sample quantile", ylab = "The theoretical Normal distribution quantile")
+abline(0,1)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$ht, qs)
+theo_qs <- qgamma(qs, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2])
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Gamma Distrbution; MLE", 
+     xlab = "The sample quantile", ylab = "The theoretical Gamma distribution quantile")
+abline(0,1)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+qs <- seq(0.05, 0.95, length = 50)
+
+sample_qs <- quantile(d1$ht, qs)
+theo_qs <- qweibull(qs, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2])
+
+plot(sample_qs, theo_qs, pch = 16, main = "QQ plot for sample distribution and estimated Weibull Distrbution; MLE", 
+     xlab = "The sample quantile", ylab = "The theoretical Weibull distribution quantile")
+abline(0,1)
+```
+
+5. Estimated Median
+```{r}
+# Sample Median
+median(d1$ht)
+
+# Normal Distribution
+qnorm(.5, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2])
+
+# Gamma Distribution
+qgamma(.5, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2])
+
+# Weibull Distribution
+qweibull(.5, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2])
+```
+Normal distribution : 160.74
+Gamma distribution : 160.63
+Weibull distribution : 161.51
+
+6. Median Sample Distribution (Histogram)
+
+    * Normal Distribution
+```{r}
+# Normal Distribution
+M <- 5000
+N <- 1000
+out <- rnorm(N*M, mean = coef(fit_norm)[1], sd = coef(fit_norm)[2]) %>% array(dim = c(M,N))
+sample_normal_dist_mle <- apply(out, 1, median)
+hist(sample_normal_dist_mle, breaks = 100, main = "Histogram of Hegiht Sample Normal Distribution; MLE", xlab = "Height(cm)", freq = FALSE)
+```
+
+    * Gamma Distribution
+```{r}
+# Gamma Distribution
+M <- 5000
+N <- 1000
+out <- rgamma(N*M, shape = coef(fit_gamma)[1], scale = coef(fit_gamma)[2]) %>% array(dim = c(M,N))
+sample_gamma_dist_mle <- apply(out, 1, median)
+hist(sample_gamma_dist_mle, breaks = 100, main = "Histogram of Hegiht Sample Gamma Distribution; MLE", xlab = "Height(cm)", freq = FALSE)
+```
+
+    * Weibull Distribution
+```{r}
+# Weibull Distribution
+M <- 5000
+N <- 1000
+out <- rweibull(N*M, shape = coef(fit_wbll)[1], scale = coef(fit_wbll)[2]) %>% array(dim = c(M,N))
+sample_wbll_dist_mle <- apply(out, 1, median)
+hist(sample_wbll_dist_mle, breaks = 100, main = "Histogram of Hegiht Sample Weibull Distribution; MLE", xlab = "Height(cm)", freq = FALSE)
+```
+
+7. Range of middle 95% of Sample Distribution
+```{r}
+# Normal Distribution
+quantile(sample_normal_dist_mle, c(0.05/2, 1 - 0.05/2))
+
+# Gamma Distribution
+quantile(sample_gamma_dist_mle, c(0.05/2, 1 - 0.05/2))
+
+# Weibull Distribution
+quantile(sample_wbll_dist_mle, c(0.05/2, 1 - 0.05/2))
+```
+Normal distribution : (160.18, 161.31)
+Gamma distribution : (160.06, 161.22)
+Weibull distribution : (160.83, 162.18)
+
+# Conclusion
+
+The distribution of female adults' Glycohemoglobin does not fit in either normal, gamma, or Weibull distribution. The estimated PDF, CDF, and QQ plot does not match with any those theoretical distributions. On the other hand, the distribution of female adults' height fits well in normal and gamma distribution. Since PDF, CDF, and QQ plot of normal and gamma distribution look almost same with the distribution of the height data, it is difficult to say which distribution match with the data better. However, it is obvious that it does not fit in weibull distribution. 
+
+There is difference in values of estimates of parameters between when we use MM and MLE. However, their difference is not that big. For example, let's say that the height data is following gamma distribution. The model's shape is 482.1886, and scale is 0.333359 with MM method, and, with MLE, the shape is 482.0000024 and scale is 0.3334906. Their values are not same but their difference is small. Interestingly, when we assume data is normally distributed, no matter which method you use, mean and median from MM and MLE are same.
